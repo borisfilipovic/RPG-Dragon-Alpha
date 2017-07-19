@@ -5,6 +5,9 @@ using UnityStandardAssets.Characters.ThirdPerson;
 [RequireComponent(typeof (ThirdPersonCharacter))]
 public class PlayerMovement : MonoBehaviour
 {
+    [SerializeField]
+    float walkMoveStopRadius = 0.2f;
+
     ThirdPersonCharacter m_Character;   // A reference to the ThirdPersonCharacter on the object
     CameraRaycaster cameraRaycaster;
     Vector3 currentClickTarget;
@@ -22,9 +25,33 @@ public class PlayerMovement : MonoBehaviour
         if (Input.GetMouseButton(0))
         {
             print("Cursor raycast hit" + cameraRaycaster.hit.collider.gameObject.name.ToString());
-            currentClickTarget = cameraRaycaster.hit.point;  // So not set in default case
+            switch (cameraRaycaster.layerHit)
+            {
+                case Layer.Walkable:
+                    currentClickTarget = cameraRaycaster.hit.point;
+                    break;
+                case Layer.Enemy:
+                    print("Not moving to enemy.");
+                    break;
+                default:
+                    print("Unexpected layer found.");
+                    return;
+            }
+            var playertoClickPoint = currentClickTarget - transform.position;
+            if(playertoClickPoint.magnitude >= walkMoveStopRadius)
+            {
+                m_Character.Move(playertoClickPoint, false, false);
+            }    
+            else
+            {
+                m_Character.Move(Vector3.zero, false, false);
+
+            }       
         }
-        m_Character.Move(currentClickTarget - transform.position, false, false);
+        // Always move to mouse position.
+        /*
+        m_Character.Move(cameraRaycaster.hit.point - transform.position, false, false);
+        */
     }
 }
 
